@@ -20,7 +20,16 @@ func GetArticles(c *gin.Context) {
 	code := e.INVALID_PARAMS
 	if arg := c.Query("state"); arg != "" {
 		state = com.StrTo(arg).MustInt()
+		maps["state"] = state
+
 		valid.Range(state, 0, 1, "state").Message("状态只允许0或1")
+	}
+	var tagId int = -1
+	if arg := c.Query("tag_id"); arg != "" {
+		tagId = com.StrTo(arg).MustInt()
+		maps["tag_id"] = tagId
+
+		valid.Min(tagId, 1, "tag_id").Message("标签ID必须大于0")
 	}
 	if !valid.HasErrors() {
 		maps["state"] = state
@@ -68,11 +77,12 @@ func GetArticle(c *gin.Context) {
 }
 
 func AddArticle(c *gin.Context) {
-	tagId := com.StrTo(c.Query("tag_id")).MustInt()
-	title := c.Query("title")
-	desc := c.Query("desc")
-	content := c.Query("content")
-	createdBy := c.Query("created_by")
+	tagId := com.StrTo(c.PostForm("tag_id")).MustInt()
+	title := c.PostForm("title")
+	desc := c.PostForm("desc")
+	content := c.PostForm("content")
+	createdBy := c.PostForm("created_by")
+	modifiedBy := c.PostForm("modified_by")
 	state := com.StrTo(c.DefaultQuery("state", "0")).MustInt()
 	valid := validation.Validation{}
 	valid.Min(tagId, 1, "tag_id").Message("标签ID必须大于0")
@@ -80,17 +90,17 @@ func AddArticle(c *gin.Context) {
 	valid.Required(desc, "desc").Message("简述不能为空")
 	valid.Required(content, "content").Message("内容不能为空")
 	valid.Required(createdBy, "created_by").Message("创建人不能为空")
+	valid.Required(modifiedBy, "modified_by").Message("不能为空")
 	valid.Range(state, 0, 1, "state").Message("状态只允许0或1")
 	code := e.INVALID_PARAMS
 	if !valid.HasErrors() {
-		if models.ExistArticleById(tagId) {
+		if models.ExistTagById(tagId) {
 			data := make(map[string]interface{})
 			data["tag_id"] = tagId
 			data["title"] = title
 			data["content"] = content
 			data["desc"] = desc
 			data["created_by"] = createdBy
-			data["title"] = title
 			data["state"] = state
 			models.AddArticle(data)
 			code = e.SUCCESS
@@ -105,19 +115,20 @@ func AddArticle(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"code":    code,
 		"message": e.GetMsg(code),
+		"data":    make(map[string]string),
 	})
 }
 
 func EditArticle(c *gin.Context) {
 	valid := validation.Validation{}
-	id := com.StrTo(c.Param("id")).MustInt()
-	tagId := com.StrTo(c.Param("tag_id")).MustInt()
-	title := c.Query("title")
-	desc := c.Query("desc")
-	content := c.Query("content")
-	modifieBy := c.Query("modifie_by")
+	id := com.StrTo(c.PostForm("id")).MustInt()
+	tagId := com.StrTo(c.PostForm("tag_id")).MustInt()
+	title := c.PostForm("title")
+	desc := c.PostForm("desc")
+	content := c.PostForm("content")
+	modifieBy := c.PostForm("modifie_by")
 	var state int = -1
-	if arg := c.Query("state"); arg != "" {
+	if arg := c.PostForm("state"); arg != "" {
 		state = com.StrTo(arg).MustInt()
 		valid.Range(state, 0, 1, "state").Message("状态只允许0或1")
 	}
@@ -145,7 +156,7 @@ func EditArticle(c *gin.Context) {
 					data["content"] = content
 				}
 				if modifieBy != "" {
-					data["modifie_by"] = modifieBy
+					data["modified_by"] = modifieBy
 				}
 				models.EditArticle(id, data)
 				code = e.SUCCESS

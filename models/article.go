@@ -26,9 +26,9 @@ func (article *Article) BeforeUpdate(scope *gorm.Scope) error {
 	scope.SetColumn("ModifieOn", time.Now().Unix())
 	return nil
 }
+func GetArticles(pageNum int, pageSize int, maps interface{}) (articles []Article) {
+	db.Preload("Tag").Where(maps).Offset(pageNum).Limit(pageSize).Find(&articles)
 
-func GetArticles(pageNum int, pageSize int, maps interface{}) (article []Article) {
-	db.Preloads("Tag").Where(maps).Offset(pageNum).Limit(pageSize).Find(&article)
 	return
 }
 
@@ -63,13 +63,12 @@ func ExistArticleById(id int) bool {
 
 func AddArticle(data map[string]interface{}) bool {
 	db.Create(&Article{
-		TagId:      data["tag_id"].(int),
-		Title:      data["title"].(string),
-		Desc:       data["desc"].(string),
-		Content:    data["content"].(string),
-		CreatedBy:  data["create_by"].(string),
-		ModifiedBy: data["modified_by"].(string),
-		State:      data["state"].(int),
+		TagId:     data["tag_id"].(int),
+		Title:     data["title"].(string),
+		Desc:      data["desc"].(string),
+		Content:   data["content"].(string),
+		CreatedBy: data["created_by"].(string),
+		State:     data["state"].(int),
 	})
 	return true
 }

@@ -13,6 +13,7 @@ var (
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
 	PageSize     int
+	Page         int
 	JwtSecret    string
 )
 
