@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"fmt"
 	"github.com/astaxie/beego/validation"
 	"github.com/gin-gonic/gin"
 	"github.com/go-programming-tour-book/blog-service/models"
@@ -10,20 +9,21 @@ import (
 	"github.com/unknwon/com"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 func GetArticles(c *gin.Context) {
 	data := make(map[string]interface{})
 	maps := make(map[string]interface{})
 	valid := validation.Validation{}
-	var state int = -1
+	var state = -1
+	code := e.INVALID_PARAMS
 	if arg := c.Query("state"); arg != "" {
 		state = com.StrTo(arg).MustInt()
-		maps["state"] = state
 		valid.Range(state, 0, 1, "state").Message("状态只允许0或1")
 	}
-	code := e.INVALID_PARAMS
 	if !valid.HasErrors() {
+		maps["state"] = state
 		code = e.SUCCESS
 		data["list"] = models.GetArticles(util.GetPage(c), util.GetPageSize(c), maps)
 		data["total"] = models.GetArticleTotal(maps)
@@ -40,8 +40,11 @@ func GetArticles(c *gin.Context) {
 }
 
 func GetArticle(c *gin.Context) {
-	id := com.StrTo(c.Param("id")).MustInt()
-	fmt.Println("id:%s", id)
+	id, err := strconv.Atoi(c.Query("id"))
+	if err != nil {
+
+	}
+	log.Printf("id:%s", id)
 	valid := validation.Validation{}
 	code := e.INVALID_PARAMS
 	var data interface{}

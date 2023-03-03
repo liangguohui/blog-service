@@ -33,7 +33,7 @@ func GetArticles(pageNum int, pageSize int, maps interface{}) (article []Article
 }
 
 func GetArticle(id int) (article Article) {
-	db.Where("id=", id).First(&article)
+	db.Where("id = ?", id).First(&article)
 	db.Model(&article).Related(&article.Tag)
 	return
 }
